@@ -137,7 +137,8 @@
   padding-block: 5px;
   padding-inline: 20px;
   border-radius: 10px;
-  font-size: 3em;
+  font-size: 1.5em;
+  font-weight: bold;
 }
 
 .top-player-background{

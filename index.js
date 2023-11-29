@@ -5,6 +5,9 @@ let isTopPlayerTurn = true;
 let topPlayerScore = 0
 let bottomPlayerScore = 0
 
+const infoText = document.getElementById('info-text') //used to print helper text i.e. whose turn it is, and explaining outcomes
+const captureText = document.getElementById('capture-text')
+
 //also add reference to each player's home base
 const topPlayerHome = document.getElementById('top-player-home')
 const bottomPlayerHome = document.getElementById('bottom-player-home')
@@ -42,35 +45,49 @@ const countBeansLeftOnEachSide = () =>{
     console.log("Top Row: " + topRowBeanCount + " Bottom Row: " + bottomRowBeanCount)
 
     if (topRowBeanCount === 0 || bottomRowBeanCount === 0){
-        endOfGame(topPlayerScore, bottomPlayerScore)
+        endOfGame(topRowBeanCount, bottomRowBeanCount)
     }
 }
 
 //when the countBeansLeft method evaluates to 0 beans on one side of the board, this method ends the game
 //NOTE: Finish this method to ensure that the remaining beans on the board are moved into the goal
-const endOfGame = (topPlayerScore, bottomPlayerScore) => {
+const endOfGame = (topRowBeanCount, bottomRowBeanCount) => {
     console.log("Game is over because there are no more pieces left on the board")
-    const previousTopBeansCount = parseInt(topPlayerHome.innerText, 10)
-    console.log("Previous top " + previousTopBeansCount)
-    const newTopBeansCount = previousTopBeansCount + topPlayerScore
+    //we take any beans left over on the playfield (one of these is guaranteed to be 0 by the time we make it to this point)
+    topPlayerScore += topRowBeanCount
+    bottomPlayerScore += bottomRowBeanCount
+    clearPlayField(); //then we clear the playfield to visually indicate that we have done this
 
-    const previousBottomBeansCount = parseInt(bottomPlayerHome.innerText, 10)
-    const newBottomBeansCount = previousBottomBeansCount + bottomPlayerScore
-
-    console.log("New Top Beans Count: " + newTopBeansCount)
-
-    topPlayerHome.innerText = newTopBeansCount
-    bottomPlayerHome.innerText = newBottomBeansCount
+    topPlayerHome.innerText = topPlayerScore
+    bottomPlayerHome.innerText = bottomPlayerScore
 
     console.log("Final Score. Top: " + topPlayerScore + " Bottom: " + bottomPlayerScore)
-    const infoText = document.getElementById('info-text')
-    if (newTopBeansCount > newBottomBeansCount){
+
+    if (topPlayerScore > bottomPlayerScore){
         infoText.innerText = "Top Player Wins!"
-    } else if (newTopBeansCount < newBottomBeansCount){
+    } else if (topPlayerScore < bottomPlayerScore){
         infoText.innerText = "Bottom Player Wins!"
     } else {
         infoText.innerText = "It was a tie! Wow"
     }
+}
+
+const clearPlayField = () => {
+    const playFieldArray = [];
+
+    for (let i = 0; i < 6; i++) {
+        const topPlayerBucket = document.getElementById(`tp${i}`);
+        const bottomPlayerBucket = document.getElementById(`bp${i}`);
+    
+        playFieldArray.push(topPlayerBucket);
+        playFieldArray.push(bottomPlayerBucket);
+    }
+    
+    playFieldArray.forEach(bucket => {
+        bucket.innerText = 0
+    })
+    
+
 }
 
 //check to see if a capture should be effected, count the beans on the board, update the score, secdonarily, this enables a check for game ending criteria
@@ -85,6 +102,23 @@ const finishMove = finalBucket =>{
         if (isFinalBucketOnTopRow && isTopPlayerTurn || !isFinalBucketOnTopRow && !isTopPlayerTurn){
             if (countInBucketAcrossFromFinalBucket > 0){
                 console.log("CAPTURE!")
+                //print text on screen to let the players know that a capture just happened
+                let playerText = ''
+                let otherPlayerText = ''
+                let beanOrBeans = ''
+                if (isTopPlayerTurn){
+                    playerText = "Top Player"
+                    otherPlayerText = "Bottom Player"
+                } else {
+                    playerText = "Bottom Player"
+                    otherPlayerText = "Top Player"
+                }
+                if (countInBucketAcrossFromFinalBucket !== 1){
+                    beanOrBeans = "beans"
+                } else {
+                    beanOrBeans = "bean"
+                }
+                captureText.innerText = playerText + " captured " + countInBucketAcrossFromFinalBucket + " " + beanOrBeans + " from " + otherPlayerText + "!"
                 finalBucket.bucketAcross.innerText = 0 //clear out the bucket that got captured
                 if (isTopPlayerTurn){ //and send those beans to the player who did the capturing
                     const previousBeansCount = parseInt(topPlayerHome.innerText, 10)
@@ -116,7 +150,10 @@ const finishMove = finalBucket =>{
 //including logic to limit the eligible / clickable buckets to the ones belonging to the active player + not the home base / goal buckets
 const makeMove = node => {
     if (!node.topPlayerHome && !node.bottomPlayerHome){ //only make a move if the player hasn't clicked on the goal buckets i.e. you can't pick up and move pieces out of the end buckets!
-        if (node.isTopPlayerBucket && isTopPlayerTurn || !node.isTopPlayerBucket && !isTopPlayerTurn){ //and only make a move if the player has selected one of their own buckets
+        if (parseInt(node.domElement.innerText,10) === 0){
+            console.error("Player clicked on an empty bucket")
+            infoText.innerText = "Oops, you clicked an empty bucket. Try again"
+        } else if (node.isTopPlayerBucket && isTopPlayerTurn || !node.isTopPlayerBucket && !isTopPlayerTurn){ //and only make a move if the player has selected one of their own buckets
             console.log("proper combination of player and selected bucket detected. Move continues")
             let currentBucket = node
             let nextBucket = node.next
@@ -125,7 +162,7 @@ const makeMove = node => {
             let doesPlayerGoAgain = false;
             currentBucket.domElement.innerText = 0
             console.log("Player clicked " + currentBucket.domElement.id + " which contains " + countOfBeansToDistribute + " bean(s). Next bucket is: " + nextBucket.domElement.id + ". The bucket across from the clicked bucket is: " + currentBucket.bucketAcross)
-            console.log(currentBucket.bucketAcross)
+            captureText.innerText = '' //clear the field that shows info about a capture when it happens
             
             //distribute one bean sequentially around the board
             while(countOfBeansToDistribute > 0){
@@ -139,6 +176,7 @@ const makeMove = node => {
                 }
 
                 if (addOneBeanToNextBucket){
+                    console.log("Adding one more bean")
                     const countOfBeansInNextBucket = parseInt(nextBucket.domElement.innerText, 10) + 1
                     nextBucket.domElement.innerText = countOfBeansInNextBucket
                     countOfBeansToDistribute--
@@ -153,8 +191,9 @@ const makeMove = node => {
                 console.log("move ended in the player's bucket. Therefore the player who just went should go again.")
                 doesPlayerGoAgain = true
                 updateInfoText(doesPlayerGoAgain)
-                countBeansLeftOnEachSide();
                 updateScore()
+                countBeansLeftOnEachSide();
+
             } else {
                 console.log("swapping player turns")
                 finishMove(currentBucket)
@@ -223,7 +262,6 @@ const setUpPlayfield = () =>{
 
 //costmetic method only, prints helper text
 const updateInfoText = doesPlayerGoAgain =>{
-    const infoText = document.getElementById('info-text')
     infoText.innerText = checkPlayerTurn(doesPlayerGoAgain);
 }
 
@@ -245,5 +283,6 @@ const toggleBackgroundColor = () =>{
         background.classList.remove('top-player-background')
     }
 }
+
 setUpPlayfield();
 
