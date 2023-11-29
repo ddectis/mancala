@@ -1,0 +1,146 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #323232;
+    color: #adadad;
+    min-height: 100vh;
+    justify-content: center;
+  }
+  
+  input, button, textarea, select {
+    font: inherit;
+  }
+  
+  img {
+    max-width: 100%;
+    display: block;
+  }
+  
+  ul, ol {
+    list-style: none;
+    padding: 0;
+  }
+
+  h2{
+    text-align: center;
+  }
+
+  .container{
+    outline: 1px solid;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 5px 5px 6px 1px #343434;
+    width: 80%;
+  }
+
+  label{
+    text-align: center;
+    margin-bottom: 10px;
+    font-weight: bold;
+  }
+
+  input{
+    text-align: center;
+    border-radius: 5px;
+  }
+
+  button{
+    border-radius: 5px;
+    margin-block: 10px;
+    box-shadow: 3px 4px 5px 0px #343434;
+  }
+
+  .guess-count{
+    display: flex;
+    align-items: center;
+    padding-inline: 5px;
+  }
+
+  .guesses-container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .guess-result{
+    display: flex;
+    flex-direction: row;
+    margin-block: 2px;
+  }
+  .container{
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+  }
+
+
+  .bucket {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    background-color: #f0f0f0;
+    border: 1px solid #000;
+    text-align: center;
+    margin: 5px;
+    border-radius: 10px;
+    line-height: 40px;
+    font-size: 2em;
+    box-shadow: inset 6px 5px 14px 4px black;
+}
+
+.top-row{
+  background-color: rgb(37, 115, 89);
+}
+
+.bottom-row{
+  background-color: rgb(64, 77, 133);
+}
+
+.board{
+  display: flex;
+  align-items: center;
+  outline: 1px solid black;
+  padding: 5px;
+  box-shadow: -1px 9px 20px 8px black;
+  padding:20px;
+  border-radius: 15px;
+  font-weight: bold;
+  text-shadow: 3px 2px 0px black;
+}
+
+.home-pot{
+  height: 100px;
+  width: 40px;
+  border: 1px solid black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  margin-inline: 10px;
+  font-size: 3em;
+  box-shadow: inset 6px 5px 14px 4px black;
+}
+
+.info-text{
+  margin-block: 15px;
+  border: 1px solid;
+  padding-block: 5px;
+  padding-inline: 20px;
+  border-radius: 10px;
+  font-size: 3em;
+}
+
+.top-player-background{
+  background-color: rgb(55, 77, 69);
+}
+  
