@@ -14,7 +14,7 @@
     background: #323232;
     color: #adadad;
     min-height: 100vh;
-    justify-content: center;
+    padding-top: 20%;
   }
   
   input, button, textarea, select {
@@ -144,4 +144,46 @@
 .top-player-background{
   background-color: rgb(55, 77, 69);
 }
+
+.turn-phone{
+  display: flex;
+  font-weight: bold;
+  text-decoration: underline;
+  font-size: 1.5em;
+  text-align: center;
+  border:1px solid;
+  padding:10px;
+  margin-block:10%
+}
+
+.game{
+  display: none;
+}
+
+.footer{
+  font-size:0.75em;
+  text-align:center;
+  margin-block:20px;
+  position: absolute;
+  bottom: 0;
+}
+
+.footer a{
+  font-weight: bold;
+  color: inherit;
+}
+
+@media screen and (min-width: 525px) {
+  .game{
+    text-align: center;
+    display: contents;
+  }
+  
+  .turn-phone{
+    display: none;
+  }
+}
+
+
+
   
