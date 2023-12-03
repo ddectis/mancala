@@ -86,16 +86,16 @@
 
   .bucket {
     display: inline-block;
-    width: 40px;
-    height: 40px;
+    width: 70px;
+    height: 70px;
     background-color: #f0f0f0;
     border: 1px solid #000;
     text-align: center;
     margin: 5px;
     border-radius: 10px;
-    line-height: 40px;
     font-size: 2em;
     box-shadow: inset 6px 5px 14px 4px black;
+    line-height: 70px;
 }
 
 .top-row{
@@ -119,16 +119,16 @@
 }
 
 .home-pot{
-  height: 100px;
-  width: 40px;
-  border: 1px solid black;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  margin-inline: 10px;
-  font-size: 3em;
-  box-shadow: inset 6px 5px 14px 4px black;
+  height: 150px;
+    width: 70px;
+    border: 1px solid black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    margin-inline: 10px;
+    font-size: 3em;
+    box-shadow: inset 6px 5px 14px 4px black;
 }
 
 .info-text{
@@ -171,6 +171,14 @@
 .footer a{
   font-weight: bold;
   color: inherit;
+}
+
+.highlighted{
+  box-shadow: inset 0 0 16px 7px #ffd2002b;
+}
+
+.invalid{
+  box-shadow: inset 0 0 16px 7px #ff00008c;
 }
 
 @media screen and (min-width: 525px) {

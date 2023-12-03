@@ -146,14 +146,15 @@ const finishMove = finalBucket =>{
     countBeansLeftOnEachSide()
 }
 
+
 //logic to pick up the beans in a given bucket and then distribute them sequentially around the board
 //including logic to limit the eligible / clickable buckets to the ones belonging to the active player + not the home base / goal buckets
 const makeMove = node => {
-    if (!node.topPlayerHome && !node.bottomPlayerHome){ //only make a move if the player hasn't clicked on the goal buckets i.e. you can't pick up and move pieces out of the end buckets!
+    if (isBucketOnPlayField(node)){ //only make a move if the player hasn't clicked on the goal buckets i.e. you can't pick up and move pieces out of the end buckets!
         if (parseInt(node.domElement.innerText,10) === 0){
             console.error("Player clicked on an empty bucket")
             infoText.innerText = "Oops, you clicked an empty bucket. Try again"
-        } else if (node.isTopPlayerBucket && isTopPlayerTurn || !node.isTopPlayerBucket && !isTopPlayerTurn){ //and only make a move if the player has selected one of their own buckets
+        } else if (doesBucketBelongToCurrentPlayer(node)){ //and only make a move if the player has selected one of their own buckets
             console.log("proper combination of player and selected bucket detected. Move continues")
             let currentBucket = node
             let nextBucket = node.next
@@ -164,46 +165,92 @@ const makeMove = node => {
             console.log("Player clicked " + currentBucket.domElement.id + " which contains " + countOfBeansToDistribute + " bean(s). Next bucket is: " + nextBucket.domElement.id + ". The bucket across from the clicked bucket is: " + currentBucket.bucketAcross)
             captureText.innerText = '' //clear the field that shows info about a capture when it happens
             
-            //distribute one bean sequentially around the board
-            while(countOfBeansToDistribute > 0){
-                console.log("Dropping bean #" + beansDistributed + " in " + nextBucket.domElement.id)
-                currentBucket = nextBucket
-                let addOneBeanToNextBucket = true
-                if (currentBucket.bottomPlayerHome && isTopPlayerTurn){ //skip the home buckets for the opposite player
-                    addOneBeanToNextBucket = false
-                } else if(currentBucket.topPlayerHome && !isTopPlayerTurn){
-                    addOneBeanToNextBucket = false;
-                }
-
-                if (addOneBeanToNextBucket){
-                    console.log("Adding one more bean")
-                    const countOfBeansInNextBucket = parseInt(nextBucket.domElement.innerText, 10) + 1
-                    nextBucket.domElement.innerText = countOfBeansInNextBucket
-                    countOfBeansToDistribute--
-                } else {
-                    console.log("Skipped over a bucket because otherwise the the top player would have scored for the bottom player or vice versa")
-                }                
-                nextBucket = currentBucket.next
-                console.log("The new current bucket is " + currentBucket.domElement.id + ". And there is/are " + countOfBeansToDistribute + " left to distribute. Next up: " + nextBucket.domElement.id)
-            }
-    
-            if(countOfBeansToDistribute === 0 && currentBucket.domElement.id === 'bottom-player-home' || countOfBeansToDistribute === 0 && currentBucket.domElement.id === 'top-player-home'){
+            distributeBeans(currentBucket, nextBucket, countOfBeansToDistribute,beansDistributed)
+            
+            //player goes again if their moved ended in their home base
+            if(didCurrentTurnEndInActivePlayersHome(countOfBeansToDistribute,currentBucket)){
                 console.log("move ended in the player's bucket. Therefore the player who just went should go again.")
                 doesPlayerGoAgain = true
                 updateInfoText(doesPlayerGoAgain)
                 updateScore()
                 countBeansLeftOnEachSide();
-
-            } else {
+            } else { //and if not, swap turns 
                 console.log("swapping player turns")
                 finishMove(currentBucket)
-                updateInfoText(doesPlayerGoAgain);
-                
+                updateInfoText(doesPlayerGoAgain);           
             }
         } else {
             console.error("Player clicked a bucket that doesn't belong to them!")
         }
+    }
+}
 
+const isBucketOnPlayField = node =>{
+    return (!node.topPlayerHome && !node.bottomPlayerHome && parseInt(node.domElement.innerText, 10) !== 0)
+}
+
+const doesBucketBelongToCurrentPlayer = node =>{
+    return (node.isTopPlayerBucket && isTopPlayerTurn || !node.isTopPlayerBucket && !isTopPlayerTurn)
+}
+
+const distributeBeans = (currentBucket, nextBucket, countOfBeansToDistribute, beansDistributed) =>{
+    //distribute one bean sequentially around the board
+    while(countOfBeansToDistribute > 0){
+        console.log("Dropping bean #" + beansDistributed + " in " + nextBucket.domElement.id)
+        currentBucket = nextBucket
+        let addOneBeanToNextBucket = true
+        if (currentBucket.bottomPlayerHome && isTopPlayerTurn){ //skip the home buckets for the opposite player
+            addOneBeanToNextBucket = false
+        } else if(currentBucket.topPlayerHome && !isTopPlayerTurn){
+            addOneBeanToNextBucket = false;
+        }
+
+        if (addOneBeanToNextBucket){
+            console.log("Adding one more bean")
+            const countOfBeansInNextBucket = parseInt(nextBucket.domElement.innerText, 10) + 1
+            nextBucket.domElement.innerText = countOfBeansInNextBucket
+            countOfBeansToDistribute--
+        } else {
+            console.log("Skipped over a bucket because otherwise the the top player would have scored for the bottom player or vice versa")
+        }                
+        nextBucket = currentBucket.next
+        console.log("The new current bucket is " + currentBucket.domElement.id + ". And there is/are " + countOfBeansToDistribute + " left to distribute. Next up: " + nextBucket.domElement.id)
+    }
+}
+
+const didCurrentTurnEndInActivePlayersHome = (countOfBeansToDistribute, currentBucket) =>{
+    return (countOfBeansToDistribute === 0 && currentBucket.domElement.id === 'bottom-player-home' || countOfBeansToDistribute === 0 && currentBucket.domElement.id === 'top-player-home')    
+}
+
+//a method to highlight how far the player will move given the beans in a given bucket
+const mouseOver = (node, linkedListOfBuckets) =>{
+    linkedListOfBuckets.forEach(bucket =>{ //start by turning off any highlighted cells
+        const domElement = bucket.domElement
+        if (domElement.classList.contains('highlighted')){
+            domElement.classList.remove('highlighted')
+        }
+        if (domElement.classList.contains('invalid')){
+            domElement.classList.remove('invalid')
+        }
+    })
+    
+    if (isTopPlayerTurn && node.isTopPlayerBucket || !isTopPlayerTurn && !node.isTopPlayerBucket){
+        node.domElement.classList.add('highlighted')
+        
+        let countOfBucketsToIlluminate = parseInt(node.data.innerText, 10)
+        let currentBucket = node
+        while (countOfBucketsToIlluminate > 0){
+            let nextBucket = currentBucket.next
+            console.log(nextBucket.domElement)
+            if (isTopPlayerTurn && !nextBucket.bottomPlayerHome || !isTopPlayerTurn && !nextBucket.topPlayerHome){
+                nextBucket.domElement.classList.add('highlighted')
+                countOfBucketsToIlluminate -= 1
+            }
+            
+            currentBucket = nextBucket
+        }
+    } else {
+        node.domElement.classList.add('invalid')
     }
     
 }
@@ -235,14 +282,14 @@ const setUpPlayfield = () =>{
     linkedListOfBuckets.append(topPlayerBucket2, false, false, bottomPlayerBucket3, true)
     linkedListOfBuckets.append(topPlayerBucket1, false, false, bottomPlayerBucket4, true)
     linkedListOfBuckets.append(topPlayerBucket0, false, false, bottomPlayerBucket5, true)
-    linkedListOfBuckets.append(topPlayerHome, true, false)
+    linkedListOfBuckets.append(topPlayerHome, true, false, null, true)
     linkedListOfBuckets.append(bottomPlayerBucket5, false, false, topPlayerBucket0, false)
     linkedListOfBuckets.append(bottomPlayerBucket4, false, false, topPlayerBucket1, false)
     linkedListOfBuckets.append(bottomPlayerBucket3, false, false, topPlayerBucket2, false)
     linkedListOfBuckets.append(bottomPlayerBucket2, false, false, topPlayerBucket3, false)
     linkedListOfBuckets.append(bottomPlayerBucket1, false, false, topPlayerBucket4, false)
     linkedListOfBuckets.append(bottomPlayerBucket0, false, false, topPlayerBucket5, false)
-    linkedListOfBuckets.append(bottomPlayerHome, false, true)
+    linkedListOfBuckets.append(bottomPlayerHome, false, true, null, false)
 
     //iterate over the linked list and set the starting conditoions
     linkedListOfBuckets.forEach(node =>{
@@ -254,6 +301,7 @@ const setUpPlayfield = () =>{
             domElement.innerText = 0;
         }
         domElement.addEventListener("click", () => makeMove(node))
+        domElement.addEventListener('mouseover', () => mouseOver(node, linkedListOfBuckets))
     })
     
     updateInfoText();
