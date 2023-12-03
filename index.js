@@ -92,17 +92,16 @@ const clearPlayField = () => {
 
 //check to see if a capture should be effected, count the beans on the board, update the score, secdonarily, this enables a check for game ending criteria
 const finishMove = finalBucket =>{ 
-    console.log(finalBucket)
     const countInFinalBucket = parseInt(finalBucket.data.innerText, 10)
     const countInBucketAcrossFromFinalBucket = parseInt(finalBucket.bucketAcross.innerText)
-    console.log("Count in bucket across from final " + countInBucketAcrossFromFinalBucket)
+    //console.log("Count in bucket across from final " + countInBucketAcrossFromFinalBucket)
     const isFinalBucketOnTopRow = finalBucket.isTopPlayerBucket
-    console.log("Count in Final Bucket: " + countInFinalBucket)
+    //console.log("Count in Final Bucket: " + countInFinalBucket)
     if (countInFinalBucket === 1){
-        console.log("Hey now, this bucket was empty when we landed here. Should there be a capture? isTopPlayerBucket: " + isFinalBucketOnTopRow)
+        //console.log("Hey now, this bucket was empty when we landed here. Should there be a capture? isTopPlayerBucket: " + isFinalBucketOnTopRow)
         if (isFinalBucketOnTopRow && isTopPlayerTurn || !isFinalBucketOnTopRow && !isTopPlayerTurn){
             if (countInBucketAcrossFromFinalBucket > 0){
-                console.log("CAPTURE!")
+                //console.log("CAPTURE!")
                 //print text on screen to let the players know that a capture just happened
                 let playerText = ''
                 let otherPlayerText = ''
@@ -131,11 +130,11 @@ const finishMove = finalBucket =>{
                     bottomPlayerHome.innerText = newBeansCount
                 }
             } else{
-                console.log("it would have been a capture except the bucket across the board was empty")
+                //console.log("it would have been a capture except the bucket across the board was empty")
             }
             
         } else {
-            console.log("no capture because that bucket doesn't below to player")
+            //console.log("no capture because that bucket doesn't below to player")
         }
 
     }
@@ -153,31 +152,33 @@ const finishMove = finalBucket =>{
 const makeMove = node => {
     if (isBucketOnPlayField(node)){ //only make a move if the player hasn't clicked on the goal buckets i.e. you can't pick up and move pieces out of the end buckets!
         if (parseInt(node.domElement.innerText,10) === 0){
-            console.error("Player clicked on an empty bucket")
+            //console.error("Player clicked on an empty bucket")
             infoText.innerText = "Oops, you clicked an empty bucket. Try again"
         } else if (doesBucketBelongToCurrentPlayer(node)){ //and only make a move if the player has selected one of their own buckets
-            console.log("proper combination of player and selected bucket detected. Move continues")
+            reportMoveToServer(node.domElement.id)
+            //console.log("proper combination of player and selected bucket detected. Move continues")
             let currentBucket = node
             let nextBucket = node.next
             let countOfBeansToDistribute = parseInt(node.domElement.innerText, 10)
             let beansDistributed = 0;
             let doesPlayerGoAgain = false;
             currentBucket.domElement.innerText = 0
-            console.log("Player clicked " + currentBucket.domElement.id + " which contains " + countOfBeansToDistribute + " bean(s). Next bucket is: " + nextBucket.domElement.id + ". The bucket across from the clicked bucket is: " + currentBucket.bucketAcross)
+            //console.log("Player clicked " + currentBucket.domElement.id + " which contains " + countOfBeansToDistribute + " bean(s). Next bucket is: " + nextBucket.domElement.id + ". The bucket across from the clicked bucket is: " + currentBucket.bucketAcross)
             captureText.innerText = '' //clear the field that shows info about a capture when it happens
             
-            currentBucket = distributeBeans(currentBucket, nextBucket, countOfBeansToDistribute,beansDistributed)
+            //distribute all the beans one at a time and then return the last bucket
+            const lastBucket = distributeBeans(currentBucket, nextBucket, countOfBeansToDistribute,beansDistributed)
             
             //player goes again if their moved ended in their home base
             if(didCurrentTurnEndInActivePlayersHome(countOfBeansToDistribute,currentBucket)){
-                console.log("move ended in the player's bucket. Therefore the player who just went should go again.")
+                //console.log("move ended in the player's bucket. Therefore the player who just went should go again.")
                 doesPlayerGoAgain = true
                 updateInfoText(doesPlayerGoAgain)
                 updateScore()
                 countBeansLeftOnEachSide();
             } else { //and if not, swap turns 
                 console.log("swapping player turns")
-                finishMove(currentBucket)
+                finishMove(lastBucket)
                 updateInfoText(doesPlayerGoAgain);           
             }
         } else {
@@ -199,7 +200,7 @@ const doesBucketBelongToCurrentPlayer = node =>{
 //distribute one bean in each subsequent bucket sequentially around the board
 const distributeBeans = (bucketInConsideration, nextBucket, countOfBeansToDistribute, beansDistributed) =>{
     while(countOfBeansToDistribute > 0){
-        console.log("Dropping bean #" + beansDistributed + " in " + bucketInConsideration.domElement.id)
+        //console.log("Dropping bean #" + beansDistributed + " in " + bucketInConsideration.domElement.id)
         bucketInConsideration = nextBucket
         let addOneBeanToNextBucket = true
         if (bucketInConsideration.bottomPlayerHome && isTopPlayerTurn){ //skip the home buckets for the opposite player
@@ -209,15 +210,15 @@ const distributeBeans = (bucketInConsideration, nextBucket, countOfBeansToDistri
         }
 
         if (addOneBeanToNextBucket){
-            console.log("Adding one more bean")
+            //console.log("Adding one more bean")
             const countOfBeansInNextBucket = parseInt(nextBucket.domElement.innerText, 10) + 1
             nextBucket.domElement.innerText = countOfBeansInNextBucket
             countOfBeansToDistribute--
         } else {
-            console.log("Skipped over a bucket because otherwise the the top player would have scored for the bottom player or vice versa")
+            //console.log("Skipped over a bucket because otherwise the the top player would have scored for the bottom player or vice versa")
         }                
         nextBucket = bucketInConsideration.next
-        console.log("The new current bucket is " + bucketInConsideration.domElement.id + ". And there is/are " + countOfBeansToDistribute + " left to distribute. Next up: " + nextBucket.domElement.id)
+        //console.log("The new current bucket is " + bucketInConsideration.domElement.id + ". And there is/are " + countOfBeansToDistribute + " left to distribute. Next up: " + nextBucket.domElement.id)
     }
 
     return bucketInConsideration
@@ -338,4 +339,30 @@ const toggleBackgroundColor = () =>{
 }
 
 setUpPlayfield();
+
+
+const reportMoveToServer = (message) =>{
+    // Check if the WebSocket connection is open
+    if (socket.readyState === WebSocket.OPEN) {
+        // Send the message to the connected client
+        socket.send(message);
+    } else {
+        console.error('WebSocket connection is not open');
+    }
+}
+
+
+const socket = new WebSocket('ws://127.0.0.1:3000')
+
+socket.addEventListener('message', (event) =>{
+    console.log("Message from server:", event.data)
+})
+
+
+socket.addEventListener('open', (event) =>{
+    console.log("Client reports opened web socket: ", event)
+    
+})
+
+//sendMessage("Sending a message from client to server")
 
