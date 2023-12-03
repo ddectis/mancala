@@ -1,0 +1,15 @@
+{
+  "name": "manc",
+  "version": "1.0.0",
+  "description": "I spent the day creating an almost-complete JavaScript implementation of the classic game, Mancala.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ws": "^8.14.2"
+  }
+}

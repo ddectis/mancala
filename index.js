@@ -185,23 +185,25 @@ const makeMove = node => {
     }
 }
 
+//exclude the 2 home base buckets on the left and right side of the board
 const isBucketOnPlayField = node =>{
     return (!node.topPlayerHome && !node.bottomPlayerHome && parseInt(node.domElement.innerText, 10) !== 0)
 }
 
+//ensure the active player has clicked a bucket that belongs to them
 const doesBucketBelongToCurrentPlayer = node =>{
     return (node.isTopPlayerBucket && isTopPlayerTurn || !node.isTopPlayerBucket && !isTopPlayerTurn)
 }
 
-const distributeBeans = (currentBucket, nextBucket, countOfBeansToDistribute, beansDistributed) =>{
-    //distribute one bean sequentially around the board
+//distribute one bean in each subsequent bucket sequentially around the board
+const distributeBeans = (bucketInConsideration, nextBucket, countOfBeansToDistribute, beansDistributed) =>{
     while(countOfBeansToDistribute > 0){
-        console.log("Dropping bean #" + beansDistributed + " in " + nextBucket.domElement.id)
-        currentBucket = nextBucket
+        console.log("Dropping bean #" + beansDistributed + " in " + bucketInConsideration.domElement.id)
+        bucketInConsideration = nextBucket
         let addOneBeanToNextBucket = true
-        if (currentBucket.bottomPlayerHome && isTopPlayerTurn){ //skip the home buckets for the opposite player
+        if (bucketInConsideration.bottomPlayerHome && isTopPlayerTurn){ //skip the home buckets for the opposite player
             addOneBeanToNextBucket = false
-        } else if(currentBucket.topPlayerHome && !isTopPlayerTurn){
+        } else if(bucketInConsideration.topPlayerHome && !isTopPlayerTurn){
             addOneBeanToNextBucket = false;
         }
 
@@ -213,8 +215,8 @@ const distributeBeans = (currentBucket, nextBucket, countOfBeansToDistribute, be
         } else {
             console.log("Skipped over a bucket because otherwise the the top player would have scored for the bottom player or vice versa")
         }                
-        nextBucket = currentBucket.next
-        console.log("The new current bucket is " + currentBucket.domElement.id + ". And there is/are " + countOfBeansToDistribute + " left to distribute. Next up: " + nextBucket.domElement.id)
+        nextBucket = bucketInConsideration.next
+        console.log("The new current bucket is " + bucketInConsideration.domElement.id + ". And there is/are " + countOfBeansToDistribute + " left to distribute. Next up: " + nextBucket.domElement.id)
     }
 }
 
