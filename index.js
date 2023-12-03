@@ -92,11 +92,12 @@ const clearPlayField = () => {
 
 //check to see if a capture should be effected, count the beans on the board, update the score, secdonarily, this enables a check for game ending criteria
 const finishMove = finalBucket =>{ 
+    console.log(finalBucket)
     const countInFinalBucket = parseInt(finalBucket.data.innerText, 10)
     const countInBucketAcrossFromFinalBucket = parseInt(finalBucket.bucketAcross.innerText)
     console.log("Count in bucket across from final " + countInBucketAcrossFromFinalBucket)
     const isFinalBucketOnTopRow = finalBucket.isTopPlayerBucket
-    console.log("Count: " + countInFinalBucket)
+    console.log("Count in Final Bucket: " + countInFinalBucket)
     if (countInFinalBucket === 1){
         console.log("Hey now, this bucket was empty when we landed here. Should there be a capture? isTopPlayerBucket: " + isFinalBucketOnTopRow)
         if (isFinalBucketOnTopRow && isTopPlayerTurn || !isFinalBucketOnTopRow && !isTopPlayerTurn){
@@ -165,7 +166,7 @@ const makeMove = node => {
             console.log("Player clicked " + currentBucket.domElement.id + " which contains " + countOfBeansToDistribute + " bean(s). Next bucket is: " + nextBucket.domElement.id + ". The bucket across from the clicked bucket is: " + currentBucket.bucketAcross)
             captureText.innerText = '' //clear the field that shows info about a capture when it happens
             
-            distributeBeans(currentBucket, nextBucket, countOfBeansToDistribute,beansDistributed)
+            currentBucket = distributeBeans(currentBucket, nextBucket, countOfBeansToDistribute,beansDistributed)
             
             //player goes again if their moved ended in their home base
             if(didCurrentTurnEndInActivePlayersHome(countOfBeansToDistribute,currentBucket)){
@@ -218,6 +219,8 @@ const distributeBeans = (bucketInConsideration, nextBucket, countOfBeansToDistri
         nextBucket = bucketInConsideration.next
         console.log("The new current bucket is " + bucketInConsideration.domElement.id + ". And there is/are " + countOfBeansToDistribute + " left to distribute. Next up: " + nextBucket.domElement.id)
     }
+
+    return bucketInConsideration
 }
 
 const didCurrentTurnEndInActivePlayersHome = (countOfBeansToDistribute, currentBucket) =>{
@@ -243,7 +246,7 @@ const mouseOver = (node, linkedListOfBuckets) =>{
         let currentBucket = node
         while (countOfBucketsToIlluminate > 0){
             let nextBucket = currentBucket.next
-            console.log(nextBucket.domElement)
+            //console.log(nextBucket.domElement)
             if (isTopPlayerTurn && !nextBucket.bottomPlayerHome || !isTopPlayerTurn && !nextBucket.topPlayerHome){
                 nextBucket.domElement.classList.add('highlighted')
                 countOfBucketsToIlluminate -= 1
