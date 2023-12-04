@@ -1,5 +1,5 @@
 class Node {
-  constructor(data, topPlayerHome = false, bottomPlayerHome = false, bucketAcross, isTopPlayerBucket) {
+  constructor(data, topPlayerHome = false, bottomPlayerHome = false, bucketAcross, isTopPlayerBucket, index) {
     this.data = data;
     this.topPlayerHome = topPlayerHome
     this.bottomPlayerHome = bottomPlayerHome
@@ -7,6 +7,7 @@ class Node {
     this.next = null;
     this.bucketAcross = bucketAcross; //what bucket is across the gameboard from the bucket
     this.isTopPlayerBucket = isTopPlayerBucket
+    this.index = index
   }
 }
 
@@ -16,8 +17,8 @@ export default class CircularLinkedList {
     this.size = 0;
   }
 
-  append(data, topPlayerHome = false, bottomPlayerHome = false, bucketAcross, isTopPlayerBucket) {
-    const newNode = new Node(data, topPlayerHome, bottomPlayerHome, bucketAcross, isTopPlayerBucket);
+  append(data, topPlayerHome = false, bottomPlayerHome = false, bucketAcross, isTopPlayerBucket, index) {
+    const newNode = new Node(data, topPlayerHome, bottomPlayerHome, bucketAcross, isTopPlayerBucket, index);
     this.size++
     if (!this.head) {
       this.head = newNode;
@@ -57,6 +58,22 @@ export default class CircularLinkedList {
       callback(current);
       current = current.next;
     } while (current !== this.head);
+  }
+
+  getByIndex(index) {
+    console.log("Get By Index: ", index)
+    let current = this.head;
+    for (let i = 0; i < index; i++) {
+      if (!current) {
+        throw new Error("Index out of range");
+      }
+      current = current.next;
+    }
+    if (!current) {
+      throw new Error("Index out of range");
+    }
+    console.log("returning: ", current)
+    return current;
   }
 
 }

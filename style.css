@@ -116,6 +116,7 @@
   border-radius: 15px;
   font-weight: bold;
   text-shadow: 3px 2px 0px black;
+  background: #5d4332;
 }
 
 .home-pot{
@@ -166,6 +167,7 @@
   margin-block:20px;
   position: absolute;
   bottom: 0;
+  display: none;
 }
 
 .footer a{
