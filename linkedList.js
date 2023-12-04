@@ -61,7 +61,6 @@ export default class CircularLinkedList {
   }
 
   getByIndex(index) {
-    console.log("Get By Index: ", index)
     let current = this.head;
     for (let i = 0; i < index; i++) {
       if (!current) {
@@ -72,7 +71,7 @@ export default class CircularLinkedList {
     if (!current) {
       throw new Error("Index out of range");
     }
-    console.log("returning: ", current)
+    
     return current;
   }
 

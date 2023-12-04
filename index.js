@@ -8,6 +8,7 @@ const startingCount = 4
 let isTopPlayerTurn = true;
 let topPlayerScore = 0
 let bottomPlayerScore = 0
+let isTopPlayer = null
 
 const infoText = document.getElementById('info-text') //used to print helper text i.e. whose turn it is, and explaining outcomes
 const captureText = document.getElementById('capture-text')
@@ -96,8 +97,8 @@ const clearPlayField = () => {
 
 //check to see if a capture should be effected, count the beans on the board, update the score, secdonarily, this enables a check for game ending criteria
 const finishMove = finalBucket =>{ 
-    console.log("in finishMove()")
-    console.log("Final Bucket: ", finalBucket)
+    //console.log("in finishMove()")
+    //console.log("Final Bucket: ", finalBucket)
     const countInFinalBucket = parseInt(finalBucket.data.innerText, 10)
     if (!finalBucket.topPlayerHome && ! finalBucket.bottomPlayerHome){
         const countInBucketAcrossFromFinalBucket = parseInt(finalBucket.bucketAcross.innerText)
@@ -148,25 +149,29 @@ const finishMove = finalBucket =>{
 
     }
     
-        console.log(finalBucket.bucketAcross)
-
-    isTopPlayerTurn = !isTopPlayerTurn
+    swapActivePlayer()
     clearHighlightedBuckets()
     toggleBackgroundColor()
     updateScore()
     countBeansLeftOnEachSide()
 }
 
+const swapActivePlayer = () =>{
+    console.log("Swapping active player")
+    isTopPlayerTurn = !isTopPlayerTurn
+}
+
 
 //logic to pick up the beans in a given bucket and then distribute them sequentially around the board
 //including logic to limit the eligible / clickable buckets to the ones belonging to the active player + not the home base / goal buckets
 const makeMove = async (node) => {
+    console.log("isTopPlayerTurn: " + isTopPlayerTurn)
     if (isBucketOnPlayField(node)){ //only make a move if the player hasn't clicked on the goal buckets i.e. you can't pick up and move pieces out of the end buckets!
         if (parseInt(node.domElement.innerText,10) === 0){
             //console.error("Player clicked on an empty bucket")
             infoText.innerText = "Oops, you clicked an empty bucket. Try again"
-        } else if (doesBucketBelongToCurrentPlayer(node)){ //and only make a move if the player has selected one of their own buckets
-            console.log(node)
+        } else if (doesBucketBelongToLocalPlayer(node)){ //and only make a move if the player has selected one of their own buckets
+           //console.log(node)
             reportMoveToServer(node.index)
             clearHighlightedBuckets(); //we're now in a move, so we don't need to see the helper highligher that show how far a move will travel.
             //console.log("proper combination of player and selected bucket detected. Move continues")
@@ -184,7 +189,7 @@ const makeMove = async (node) => {
             
             //player goes again if their moved ended in their home base
             if(didCurrentTurnEndInActivePlayersHome(lastBucket)){
-                //console.log("move ended in the player's bucket. Therefore the player who just went should go again.")
+                console.log("move ended in the player's bucket. Therefore the player who just went should go again.")
                 doesPlayerGoAgain = true
                 updateInfoText(doesPlayerGoAgain)
                 updateScore()
@@ -213,6 +218,23 @@ const executeReceivedMove = async node =>{
     
     //distribute all the beans one at a time and then return the last bucket
     const lastBucket = await distributeBeans(currentBucket, nextBucket, countOfBeansToDistribute,beansDistributed)    
+    //finishMove(lastBucket)
+
+    swapActivePlayer()
+    if (didCurrentTurnEndInActivePlayersHome(lastBucket)){
+        console.log("The other player should go again")
+        doesPlayerGoAgain = true;
+        updateScore()
+        countBeansLeftOnEachSide()
+        updateInfoText(doesPlayerGoAgain)
+    } else {
+        finishMove(lastBucket)
+        updateInfoText(doesPlayerGoAgain)
+        
+    }
+
+
+        
 }
 
 //exclude the 2 home base buckets on the left and right side of the board
@@ -221,8 +243,13 @@ const isBucketOnPlayField = node =>{
 }
 
 //ensure the active player has clicked a bucket that belongs to them
+//this method is for the 2 player hot seat mode and is superseded by the doesBucketBelongToLocalPlayer method for web play
 const doesBucketBelongToCurrentPlayer = node =>{
     return (node.isTopPlayerBucket && isTopPlayerTurn || !node.isTopPlayerBucket && !isTopPlayerTurn)
+}
+
+const doesBucketBelongToLocalPlayer = node =>{
+    return (node.isTopPlayerBucket && isTopPlayer || !node.isTopPlayerBucket && !isTopPlayer)
 }
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
@@ -234,8 +261,11 @@ const distributeBeans = async (bucketInConsideration, nextBucket, countOfBeansTo
         bucketInConsideration = nextBucket
         let addOneBeanToNextBucket = true
         if (bucketInConsideration.bottomPlayerHome && isTopPlayerTurn){ //skip the home buckets for the opposite player
+            console.log("skipping this bucket?")
             addOneBeanToNextBucket = false
         } else if(bucketInConsideration.topPlayerHome && !isTopPlayerTurn){
+            
+            console.log("skipping this bucket? isTopPlayerTurn: " + isTopPlayerTurn)
             addOneBeanToNextBucket = false;
         }
 
@@ -244,13 +274,21 @@ const distributeBeans = async (bucketInConsideration, nextBucket, countOfBeansTo
             const countOfBeansInNextBucket = parseInt(nextBucket.domElement.innerText, 10) + 1
             nextBucket.domElement.innerText = countOfBeansInNextBucket
             countOfBeansToDistribute--
+            bucketInConsideration.domElement.classList.add('highlighted')
         } else {
             //console.log("Skipped over a bucket because otherwise the the top player would have scored for the bottom player or vice versa")
+            bucketInConsideration.domElement.classList.add('invalid')
         }                
         nextBucket = bucketInConsideration.next
-        bucketInConsideration.domElement.classList.add('highlighted')
+        
+        
         await delay(distributionDelay)
-        bucketInConsideration.domElement.classList.remove('highlighted')
+        if (bucketInConsideration.domElement.classList.contains('highlighted')){
+            bucketInConsideration.domElement.classList.remove('highlighted')
+        } else if (bucketInConsideration.domElement.classList.contains('invalid')){
+            bucketInConsideration.domElement.classList.remove('invalid')
+        }
+        
         //console.log("The new current bucket is " + bucketInConsideration.domElement.id + ". And there is/are " + countOfBeansToDistribute + " left to distribute. Next up: " + nextBucket.domElement.id)
     }
     //console.log("Bucket in consideration: ", bucketInConsideration)
@@ -322,7 +360,7 @@ const setUpPlayfield = () =>{
     const bottomPlayerBucket5 = document.getElementById('bp5');
 
     //create a linked list using those bucket objects to keep track of the pathway around the board
-    
+                            //domElement, topPlayerHome, bottomPlayerHome, bucketAcross, isTopPlayerBucket, index
     linkedListOfBuckets.append(topPlayerBucket5, false, false, bottomPlayerBucket0, true, 0);
     linkedListOfBuckets.append(topPlayerBucket4, false, false, bottomPlayerBucket1, true, 1)
     linkedListOfBuckets.append(topPlayerBucket3, false, false, bottomPlayerBucket2, true, 2)
@@ -374,6 +412,7 @@ const updateScore = () =>{
 //this method just changes the background color based on what the isTopPlayerTurn bool says
 //this method doesn't change the player's turn. It's purely cosmetic
 const toggleBackgroundColor = () =>{
+    console.log("toggling background color. TopPlayerTurn: " + isTopPlayerTurn)
     const background = document.body
     if(isTopPlayerTurn && !background.classList.contains('top-player-background')){
         background.classList.add('top-player-background')
@@ -389,6 +428,7 @@ const reportMoveToServer = (bucketIndex) =>{
     if (socket.readyState === WebSocket.OPEN) {
         // Send the message to the connected client
         const messageObject = {
+            didTopPlayerMakeLastMove: isTopPlayerTurn,
             bucketIndex: bucketIndex
         }
         console.log(messageObject)
@@ -406,11 +446,29 @@ const handleMessage = message => {
     if (message.isInitialConnectionMessage){
         console.log("connection message received")
         //TODO: set player 1 and player 2 based on the order that they connect
+        if (message.connectedClients === 1){
+            console.log("1st player connected. Assigning TOP PLAYER")
+            //isTopPlayer = true
+        } else if(message.connectedClients === 2){
+            console.log("2nd player connected. Assigning BOTTOM PLAYER")
+            //isTopPlayer = false
+        } else {
+            console.log("woah, man. That's, like, way too many connections.")
+        }
+
     } else {
         console.log("incoming move")
-        const node = getNodeFromIndex(message.bucketIndex)
-        console.log(node)    
-        executeReceivedMove(node)        
+        if (message.didTopPlayerMakeLastMove != isTopPlayer){
+            const node = getNodeFromIndex(message.bucketIndex)
+            //console.log(node)    
+        
+            executeReceivedMove(node) 
+
+        } else {
+            console.warn("Ignoring that message because it describes the move the player just made locally")
+        }
+        
+         
     }
 
 }
@@ -433,9 +491,29 @@ socket.addEventListener('open', (event) =>{
 
 const getNodeFromIndex = i =>{
     const returnValue = linkedListOfBuckets.getByIndex(i)
-    console.log("return value ", returnValue)
+    //console.log("return value ", returnValue)
     return returnValue
 }
+
+const selectTopPlayerButton = document.getElementById('select-top-player')
+const selectBottomPlayerButton = document.getElementById('select-bottom-player')
+
+selectTopPlayerButton.addEventListener('click', () =>{
+    console.log("click. isTop " + isTopPlayer)
+    if (isTopPlayer === null){
+        isTopPlayer = true
+        console.warn("Selecting top player: " + isTopPlayer)
+    }
+    
+    
+})
+selectBottomPlayerButton.addEventListener('click', () =>{
+    if (isTopPlayer === null){
+        isTopPlayer = false
+        console.warn("Selecting top player: " + isTopPlayer)
+    }
+    
+})
 
 setUpPlayfield();
 
@@ -444,6 +522,7 @@ setUpPlayfield();
 
 //TODO:
 //make it selectable 2 player local or 2 player online
-//slow down the movement as a turn plays out so that it can be visualized
-//in the online mode, you'll need an isThisPlayersTurn bool
-//and we should async/await the return of that variable or something like that
+//the multiplayer logic needs to pass around the bool to change player turns
+//build an on-screen console to report server messages (join, leave, and moves)
+
+//NEXT: the logic to ignore messages generated locally doesn't consistently alternate
